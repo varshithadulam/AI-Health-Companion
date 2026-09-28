@@ -1,0 +1,12 @@
+﻿venv/
+.venv/
+__pycache__/
+*.pyc
+/firebase/serviceAccountKey.json
+.env
+.env.*
+.vscode/
+.DS_Store
+Thumbs.db
+
+/model/*.pkl

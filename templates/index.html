@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Health Companion</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+<div class="container">
+
+    <header>
+        <h1>AI Health Companion</h1>
+        <p>Real-Time Health Risk Prediction</p>
+    </header>
+
+    <div class="card">
+
+        <button onclick="predict()">Predict Health</button>
+
+        <h2 id="outputHeading" class="hidden">Health Prediction Result</h2>
+
+        <div id="resultText" class="result-text"></div>
+
+        <!-- Pie Charts Section -->
+        <div class="charts hidden" id="chartsSection">
+
+            <div class="chart-box">
+                <canvas id="tempChart"></canvas>
+                <p>Temperature (°C)</p>
+            </div>
+
+            <div class="chart-box">
+                <canvas id="hrChart"></canvas>
+                <p>Heart Rate (bpm)</p>
+            </div>
+
+            <div class="chart-box">
+                <canvas id="spo2Chart"></canvas>
+                <p>SpO₂ (%)</p>
+            </div>
+
+        </div>
+
+    </div>
+
+    <footer>
+        <p>ESP32 · Firebase · Machine Learning</p>
+    </footer>
+
+</div>
+
+<script>
+let tempChart, hrChart, spo2Chart;
+
+function createPieChart(canvasId, value, maxValue, color) {
+    const ctx = document.getElementById(canvasId).getContext("2d");
+
+    return new Chart(ctx, {
+        type: "pie",
+        data: {
+            labels: ["Value", "Remaining"],
+            datasets: [{
+                data: [value, Math.max(maxValue - value, 0)],
+                backgroundColor: [color, "#e9ecef"],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: false,
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+}
+
+function predict() {
+    fetch("/predict")
+        .then(response => response.json())
+        .then(data => {
+
+            document.getElementById("outputHeading").classList.remove("hidden");
+
+            document.getElementById("resultText").innerHTML = `
+              <b>Risk Level:</b> low risk <br>
+              <b>Temperature:</b> ${data.temperature} °C<br>
+              <b>Heart Rate:</b> ${data.heart_rate} bpm<br>
+              <b>SpO₂:</b> ${data.spo2} %<br>
+              <b>Pressure:</b> ${data.pressure} Pa
+`;
+
+
+            document.getElementById("chartsSection").classList.remove("hidden");
+
+            if (tempChart) tempChart.destroy();
+            if (hrChart) hrChart.destroy();
+            if (spo2Chart) spo2Chart.destroy();
+
+            tempChart = createPieChart("tempChart", data.temperature, 50, "#0d6efd");
+            hrChart   = createPieChart("hrChart", data.heart_rate, 200, "#dc3545");
+            spo2Chart = createPieChart("spo2Chart", data.spo2, 100, "#198754");
+        });
+}
+</script>
+
+</body>
+</html>
